@@ -25,5 +25,8 @@ func TestCreateAndValidateAndRefreshTogether(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.Equal(t, user.Username, "admin")
 
-	assert.Equal(t, true, jwt.ValidateRefreshToken(token))
+	payload, err := jwt.ValidateRefreshToken(token)
+
+	assert.Equal(t, nil, err)
+	assert.Equal(t, user.Username, payload.Username)
 }

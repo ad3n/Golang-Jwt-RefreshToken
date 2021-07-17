@@ -71,7 +71,8 @@ func main() {
 		c.BodyParser(&token)
 
 		jwt := services.Jwt{}
-		if !jwt.ValidateRefreshToken(token) {
+		user, err := jwt.ValidateRefreshToken(token)
+		if err != nil {
 			c.JSON(map[string]string{
 				"message": "invalid token",
 			})
@@ -79,8 +80,7 @@ func main() {
 			return c.SendStatus(fiber.StatusUnauthorized)
 		}
 
-		user := getUserByRefreshToken(token.RefreshToken)
-		token, err := jwt.CreateToken(user)
+		token, err = jwt.CreateToken(user)
 		if err != nil {
 			c.JSON(map[string]string{
 				"message": "unable to create access token",
@@ -93,11 +93,4 @@ func main() {
 	})
 
 	app.Listen(fmt.Sprintf(":%s", os.Getenv("APP_PORT")))
-}
-
-func getUserByRefreshToken(token string) models.User {
-	return models.User{
-		Username: "admin",
-		Password: "admin",
-	}
 }

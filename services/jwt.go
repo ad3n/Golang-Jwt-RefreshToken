@@ -23,7 +23,6 @@ func (j Jwt) CreateToken(user models.User) (models.Token, error) {
 	var err error
 
 	claims := jwt.MapClaims{}
-	claims["type"] = "access_token"
 	claims["user_id"] = user.Username
 	claims["exp"] = time.Now().Add(time.Hour * 2).Unix()
 
@@ -63,35 +62,55 @@ func (Jwt) ValidateToken(accessToken string) (models.User, error) {
 	return user, errors.New("invalid token")
 }
 
-func (Jwt) ValidateRefreshToken(token models.Token) bool {
+func (Jwt) ValidateRefreshToken(model models.Token) (models.User, error) {
 	sha1 := sha1.New()
 	io.WriteString(sha1, os.Getenv("SECRET_KEY"))
 
+	user := models.User{}
 	salt := string(sha1.Sum(nil))[0:16]
 	block, err := aes.NewCipher([]byte(salt))
 	if err != nil {
-		return false
+		return user, err
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return false
+		return user, err
 	}
 
-	data, err := base64.URLEncoding.DecodeString(token.RefreshToken)
+	data, err := base64.URLEncoding.DecodeString(model.RefreshToken)
 	if err != nil {
-		return false
+		return user, err
 	}
 
 	nonceSize := gcm.NonceSize()
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 
 	plain, err := gcm.Open(nil, nonce, ciphertext, nil)
-	if token.AccessToken == string(plain) && err == nil {
-		return true
+	if err != nil {
+		return user, err
 	}
 
-	return false
+	if string(plain) != model.AccessToken {
+		return user, errors.New("invalid token")
+	}
+
+	claims := jwt.MapClaims{}
+	parser := jwt.Parser{}
+	token, _, err := parser.ParseUnverified(model.AccessToken, claims)
+
+	if err != nil {
+		return user, err
+	}
+
+	payload, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return user, errors.New("invalid token")
+	}
+
+	user.Username = payload["user_id"].(string)
+
+	return user, nil
 }
 
 func (Jwt) createRefreshToken(token models.Token) (models.Token, error) {
