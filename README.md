@@ -4,6 +4,6 @@ Repo ini adalah demostrasi JWT support refresh token tanpa menggunakan storage
 
 ## Branch
 
-- Main: unlimited refresh token
+- [Main](https://github.com/ad3n/Golang-Jwt-RefreshToken/tree/main): unlimited refresh token
 
-- Refresh With Expire: refresh token with expire time (90 days)
+- [Refresh With Expire](https://github.com/ad3n/Golang-Jwt-RefreshToken/tree/refresh-with-expire): refresh token with expire time (90 days)
