@@ -18,7 +18,7 @@ func (j Jwt) CreateToken(user models.User) (models.Token, error) {
 
 	claims := jwt.MapClaims{}
 	claims["user_id"] = user.Username
-	claims["exp"] = time.Now().Add(time.Second * 2).Unix()
+	claims["exp"] = time.Now().Add(time.Hour * 2).Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	jwt := models.Token{}
